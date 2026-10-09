@@ -1,8 +1,8 @@
-# CondMat Research Workspace
+# Condensed Matter Research Workspace
 
 本地优先的凝聚态论文研究工作区：发现论文、分析趋势、管理全文、下载合法可获取的 PDF，并导出到 Zotero。
 
-主应用 **CondMat Radar** 使用 FastAPI + React + TypeScript + SQLite，在同一界面中提供论文发现、材料与主题统计、版本关联、下载队列、监控条件、全文检索和人工复核。`lab_paper_intake` 保留为旧版工具、迁移来源与回归对照。
+主应用 **Condensed Matter Radar** 使用 FastAPI + React + TypeScript + SQLite，在同一界面中提供论文发现、材料与主题统计、版本关联、下载队列、监控条件、全文检索和人工复核。`lab_paper_intake` 保留为旧版工具、迁移来源与回归对照。
 
 ## 功能
 
@@ -19,8 +19,8 @@
 需要 **Python 3.11+、Node.js 22、Git 和 pnpm 10**。以下命令在 PowerShell 中执行；无需激活虚拟环境。
 
 ```powershell
-git clone https://github.com/Xuduxiu/condmat-research-workspace.git
-cd condmat-research-workspace
+git clone https://github.com/Xuduxiu/condensed-matter-research-workspace.git
+cd condensed-matter-research-workspace
 
 py -3.11 -m venv condmat-trend-radar/.venv
 .\condmat-trend-radar\.venv\Scripts\python.exe -m pip install -r condmat-trend-radar/requirements.txt

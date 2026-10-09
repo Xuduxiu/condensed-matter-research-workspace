@@ -39,7 +39,7 @@ export default function Sidebar({ active, onNavigate }: { active: AppRoute; onNa
     <aside className="sidebar" aria-label="主导航">
       <div className="brand">
         <div className="brand-mark" aria-hidden="true"><i /><i /><i /></div>
-        <div><strong>CondMat Radar</strong><span>RESEARCH WORKBENCH · V2</span></div>
+        <div><strong>Condensed Matter Radar</strong><span>RESEARCH WORKBENCH · V2</span></div>
       </div>
       <nav className="nav-list">
         {nav.map((item) => (

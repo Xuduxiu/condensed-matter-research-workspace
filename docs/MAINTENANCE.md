@@ -2,7 +2,7 @@
 
 ## 组件职责
 
-### CondMat Trend Radar
+### Condensed Matter Trend Radar
 
 负责元数据摄取、语料范围、术语抽取、趋势统计、论文排序和下载任务生成。它不拥有 PDF 下载、Zotero 导出或用户论文库。
 

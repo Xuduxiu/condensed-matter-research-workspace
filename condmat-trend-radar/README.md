@@ -1,6 +1,6 @@
-# CondMat Radar：统一论文发现、趋势与资料库
+# Condensed Matter Radar：统一论文发现、趋势与资料库
 
-CondMat Radar 是本工作区唯一日常主应用。后端使用 FastAPI + SQLite，前端使用 React + TypeScript + Vite。原 `lab_paper_intake` 的可靠能力已迁入 `backend/downloader`、`backend/library` 与 `backend/scheduler`，旧项目只作为迁移来源和回滚对照保留。
+Condensed Matter Radar 是本工作区唯一日常主应用。后端使用 FastAPI + SQLite，前端使用 React + TypeScript + Vite。原 `lab_paper_intake` 的可靠能力已迁入 `backend/downloader`、`backend/library` 与 `backend/scheduler`，旧项目只作为迁移来源和回滚对照保留。
 
 ## 功能
 

@@ -24,6 +24,6 @@
 
 ## 验证边界
 
-- GitHub Actions 使用 Windows / Python 3.11 运行后端与 Intake 测试，Ubuntu / Node.js 22 / pnpm 10 执行前端安装与检查；远端结果以 [Actions 页面](https://github.com/Xuduxiu/condmat-research-workspace/actions) 为准。
+- GitHub Actions 使用 Windows / Python 3.11 运行后端与 Intake 测试，Ubuntu / Node.js 22 / pnpm 10 执行前端安装与检查；远端结果以 [Actions 页面](https://github.com/Xuduxiu/condensed-matter-research-workspace/actions) 为准。
 - 本次未重新执行真实联网扫描、机构下载、生产数据迁移或 Windows 安装包验收。
 - 其他历史报告中的数据库规模、线上成功数量与服务状态，不作为本次发布验证结果。

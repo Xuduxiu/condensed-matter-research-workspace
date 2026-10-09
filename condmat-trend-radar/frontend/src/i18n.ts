@@ -20,7 +20,7 @@ const en = {
   defaultCorpus: 'Default corpus',
   realPapers: 'Real papers',
   rawMetadataRetained: 'raw metadata retained',
-  strictCondmat: 'Strict condmat',
+  strictCondmat: 'Strict condensed matter',
   excluded: 'Excluded',
   notShownByDefault: 'not shown by default',
   noCachedData: 'No cached data',

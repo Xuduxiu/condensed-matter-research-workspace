@@ -4,7 +4,7 @@ Lab Paper Intake 是本地优先的论文筛选与交付应用。它可以：
 
 - 用自然语言规划学术检索；
 - 查询 OpenAlex、arXiv 和 Crossref 的真实元数据；
-- 从 CondMat Trend Radar 导入 CSV/JSON 候选任务；
+- 从 Condensed Matter Trend Radar 导入 CSV/JSON 候选任务；
 - 规范化 DOI、arXiv ID 和标题并去重；
 - 只解析和下载合法开放获取 PDF；
 - 选择论文并导出 CSV、BibTeX、RIS、Markdown 和 Zotero 导入包。
