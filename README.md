@@ -4,10 +4,6 @@
 
 主应用 **CondMat Radar** 使用 FastAPI + React + TypeScript + SQLite，在同一界面中提供论文发现、材料与主题统计、版本关联、下载队列、监控条件、全文检索和人工复核。`lab_paper_intake` 保留为旧版工具、迁移来源与回归对照。
 
-![CondMat Radar 总览界面](condmat-trend-radar/docs/screenshots/radar-web-v2-3/dashboard.png)
-
-上图为历史 v2.3 界面预览，其中的论文和统计不是随仓库分发的数据。
-
 ## 功能
 
 - 从 OpenAlex、Crossref、arXiv 获取真实论文元数据。

@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+data/papers.db
+data/papers.db-*
+data/backups/
+data/pdfs/*
+data/exports/*
+!data/pdfs/.gitkeep
+!data/exports/.gitkeep
+streamlit_*.log
+config/.env
+build/
+dist/

@@ -1,0 +1,43 @@
+# CondMat Radar unified local configuration example.
+# Environment variables remain authoritative; never commit real secrets.
+storage:
+  data_dir: "G:/condmat-trend-radar"
+  database: "G:/condmat-trend-radar/condmat_radar.sqlite"
+  pdf_library: "G:/condmat-trend-radar/library/pdf"
+  exports: "G:/condmat-trend-radar/exports"
+  logs: "G:/condmat-trend-radar/logs"
+
+legacy_sources:
+  intake_database: "../lab_paper_intake/data/papers.db"
+  pdf_roots:
+    - "../lab_paper_intake/data/pdfs"
+    - "../lab_paper_intake/data/exports"
+    - "../lab_paper_intake/exports"
+
+providers:
+  openalex:
+    mailto_env: "CONDMAT_RADAR_OPENALEX_EMAIL"
+    api_key_env: "CONDMAT_RADAR_OPENALEX_API_KEY"
+  unpaywall:
+    email_env: "UNPAYWALL_EMAIL"
+  deepseek:
+    api_key_env: "DEEPSEEK_API_KEY"
+    base_url_env: "DEEPSEEK_BASE_URL"
+
+daily_update:
+  scope: "core"
+  include_arxiv: true
+  download_limit: 10
+  max_download_attempts: 5
+  mock_fallback: false
+
+deduplication:
+  auto_merge_rules:
+    - "doi_exact"
+    - "arxiv_exact"
+    - "journal_reference_doi_exact"
+  title_only_action: "manual_review"
+
+zotero:
+  mode: "ris_manual"
+  direct_local_write: false

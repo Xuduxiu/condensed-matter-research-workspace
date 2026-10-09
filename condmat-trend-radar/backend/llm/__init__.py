@@ -1,0 +1,1 @@
+"""LLM integration skeletons for evidence-bound local analysis."""

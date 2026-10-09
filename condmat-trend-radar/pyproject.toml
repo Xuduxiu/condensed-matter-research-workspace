@@ -1,0 +1,17 @@
+[project]
+name = "condmat-trend-radar"
+version = "2.4.0"
+description = "Local-first condensed matter trend radar with reproducible metadata analytics."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.111.0",
+  "uvicorn[standard]>=0.30.0",
+  "pydantic>=2.7.0",
+  "python-dotenv>=1.0.1",
+  "httpx>=0.27.0",
+  "PyMuPDF>=1.24.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

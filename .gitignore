@@ -1,0 +1,81 @@
+# Secrets and machine-local configuration
+.env
+**/.env
+.env.*
+!.env.example
+**/config/.env
+deepseek_api.txt
+secrets/
+*PRIVATE*/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Python
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+
+# JavaScript
+**/node_modules/
+.pnpm-store/
+**/dist/
+**/.vite/
+
+# Build and release artifacts
+**/build/
+**/releases/
+*.exe
+*.dll
+*.pyd
+*.zip
+
+# Logs and local runtime state
+*.log
+*.out.log
+*.err.log
+*.pid
+**/*.sqlite
+**/*.sqlite-*
+*.db
+*.db-*
+data/
+condmat-trend-radar/data/cache/
+condmat-trend-radar/data/logs/
+condmat-trend-radar/data/locks/
+condmat-trend-radar/data/processed/
+condmat-trend-radar/data/exports/
+lab_paper_intake/data/papers.db
+lab_paper_intake/data/papers.db-*
+lab_paper_intake/data/backups/
+lab_paper_intake/data/pdfs/*
+lab_paper_intake/data/exports/*
+lab_paper_intake/data/inbox/*
+
+# Keep empty source-controlled data directories
+!lab_paper_intake/data/pdfs/.gitkeep
+!lab_paper_intake/data/exports/.gitkeep
+
+# OS/editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+.agents/
+.codex/
+.playwright-cli/
+
+# Local experiments, screenshots, process records, and publication staging
+/condmat-trend-radar/output/
+/condmat-trend-radar/work/
+/condmat-trend-radar/runtime/
+/tools/recover_interrupted_scan.py
+/lab_paper_intake/docs/*.pdf
+
+# Historical screenshots stay local.
+/condmat-trend-radar/docs/screenshots/
