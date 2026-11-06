@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.env
+*.key
+prl_prx_annual_2016_2026.csv
+prl_prx_papers_audit_2016_2026.csv
+prl_prx_quality_2016_2026.txt
