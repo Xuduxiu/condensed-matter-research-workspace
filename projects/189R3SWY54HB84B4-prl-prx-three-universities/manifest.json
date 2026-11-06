@@ -1,0 +1,35 @@
+{
+  "project_id": "189R3SWY54HB84B4",
+  "project_name": "PRL/PRX SUSTech UTokyo Kyoto 2016-2026",
+  "created_date": "2026-11-06",
+  "version": "scope-2026-ytd-1",
+  "repository": "Xuduxiu/condensed-matter-research-workspace",
+  "path": "projects/189R3SWY54HB84B4-prl-prx-three-universities",
+  "scope": {
+    "complete_year_start": 2016,
+    "complete_year_end": 2025,
+    "ytd_year": 2026,
+    "ytd_as_of": "2026-11-06",
+    "schools": [
+      "Southern University of Science and Technology",
+      "University of Tokyo",
+      "Kyoto University"
+    ],
+    "journals": [
+      "Physical Review Letters",
+      "Physical Review X"
+    ]
+  },
+  "expected_annual_rows": 66,
+  "previous_annual_rows": 60,
+  "current_annual_rows_blank": 66,
+  "core_metrics_per_row": [
+    "participation_count",
+    "corresponding_count"
+  ],
+  "corresponding_unknown_separate": true,
+  "analysis_completed": false,
+  "aps_author_affiliation_audit_completed": false,
+  "status": "REGISTERED_DATA_PENDING",
+  "notes": "GitHub repository manifest metadata. Local ZIP package contains SHA-256 verification for its own contents; remote GitHub files may have independent checksums. No verified statistics have been published."
+}
