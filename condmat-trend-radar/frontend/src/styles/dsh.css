@@ -1,0 +1,67 @@
+/* The theme owner is the DSH appearance plugin. These are roles, not local copies of its palettes. */
+html[data-dsh-theme] {
+  --background: var(--paper-host-base);
+  --surface: var(--paper-host-layer1);
+  --surface-elevated: var(--paper-host-layer2);
+  --surface-raised: var(--paper-host-layer2);
+  --surface-hover: var(--paper-host-layer3);
+  --border: var(--paper-host-line);
+  --border-strong: var(--paper-host-line2);
+  --text-primary: var(--paper-host-ink);
+  --text-secondary: var(--paper-host-ink2);
+  --text-tertiary: var(--paper-host-ink3);
+  --accent: var(--paper-host-accent);
+  --accent-hover: var(--paper-host-accent2);
+  --accent-soft: var(--paper-host-accent-soft);
+  --success: var(--paper-host-success);
+  --warning: var(--paper-host-warn);
+  --danger: var(--paper-host-danger);
+  --preprint: var(--paper-host-accent3);
+  --publication: color-mix(in srgb, var(--paper-host-accent3) 45%, var(--paper-host-danger));
+  --hot: color-mix(in srgb, var(--paper-host-warn) 40%, var(--paper-host-danger));
+  --button-background: var(--paper-host-brand);
+  --button-hover: var(--paper-host-brand-hover);
+  --button-ink: var(--paper-host-brand-ink);
+  --danger-fill: var(--paper-host-danger);
+  --masthead: var(--paper-host-sidebar);
+  --masthead-ink: var(--text-primary);
+  --masthead-secondary: var(--text-secondary);
+  --masthead-active: var(--accent);
+  --masthead-rule: var(--border-strong);
+  --masthead-hover: var(--accent-soft);
+  --masthead-status: var(--success);
+  --masthead-offline: var(--danger);
+  --masthead-waiting: var(--text-tertiary);
+  --scroll-thumb: var(--paper-host-scroll);
+  --workspace-field: var(--paper-host-field);
+}
+html[data-dsh-scheme="light"] { color-scheme: light; --danger-ink: #fff; }
+html[data-dsh-scheme="dark"] { color-scheme: dark; --danger-ink: var(--paper-host-base); }
+html[data-dsh-theme] ::selection { color: var(--text-primary); background: var(--paper-host-selection); }
+
+html[data-dsh-theme] .desk-shell {
+  background-color: var(--background);
+  background-image: radial-gradient(ellipse at 90% 0, var(--paper-host-accent-soft), transparent 60%);
+}
+html[data-dsh-theme] .desk-masthead { box-shadow: inset 0 -1px var(--masthead-rule); }
+html[data-dsh-theme] .desk-page :is(input:not([type=checkbox]), select, textarea) {
+  color: var(--text-primary);
+  background-color: var(--workspace-field);
+}
+html[data-dsh-theme] .desk-page .search-input input { background: transparent; }
+html[data-dsh-theme] :is(input, textarea)::placeholder { color: var(--text-tertiary); opacity: 1; }
+html[data-dsh-theme] :is(.desk-brand, .workspace-heading h1) { color: var(--text-primary); }
+html[data-dsh-theme] .detail-header { background: var(--paper-host-veil); }
+html[data-dsh-theme="glass"] .desk-shell {
+  background-image:
+    radial-gradient(ellipse at 90% 0, var(--accent-soft), transparent 57%),
+    radial-gradient(ellipse at 0 100%, var(--surface-elevated), transparent 58%);
+}
+html[data-dsh-theme="glass"] :is(.desk-masthead, .detail-header, .desk-overview__figures, .desk-overview__papers, .desk-overview__scans) {
+  backdrop-filter: blur(24px) saturate(115%);
+}
+html[data-dsh-theme="xlab"] .desk-shell {
+  background-image: linear-gradient(var(--paper-host-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-host-grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+}

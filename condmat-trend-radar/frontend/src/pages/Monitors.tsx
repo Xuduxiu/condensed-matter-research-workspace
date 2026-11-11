@@ -3,6 +3,7 @@ import { apiDelete, apiGet, apiPostJson } from '../api';
 import { formatDate, useApiData } from '../hooks';
 import { Monitor, MonitorHit } from '../types';
 import { EmptyState, ErrorState, LoadingSkeleton, MetricStrip, StatusBadge } from '../components/primitives';
+import '../styles/operations-layout.css';
 
 type Kind = 'keyword' | 'material' | 'journal' | 'author';
 type MonitorResponse = { items: Monitor[]; count: number; total_hits: number; today_new_hits: number };

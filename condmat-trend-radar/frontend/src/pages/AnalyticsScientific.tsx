@@ -33,6 +33,7 @@ import {
   type CitationBucket,
   type DownloadSourcePerformance,
 } from '../components/OperationalAnalyticsCharts';
+import { ChartPaletteContext, useChartPalette } from '../components/chartTheme';
 import SourceShiftChart, { type SourceWindowItem } from '../components/SourceShiftChart';
 
 type TrendSignalWithQuality = TrendSignal & {
@@ -314,19 +315,20 @@ export default function AnalyticsScientific({ onSelectMaterial, onSelectPaper }:
 
   const generateBrief = async () => {
     setBriefBusy(true);
-    setBriefMessage('正在基于本地论文证据生成雷达简报…');
+    setBriefMessage('正在根据本地论文生成简报…');
     try {
       const result = await apiPostJson<RadarBriefResponse>('/api/library/ai/radar-brief', { days: Math.min(days, 90), tier: 'fast', force: Boolean(brief.data?.available), limit: 20 });
-      setBriefMessage(result.cached ? '已读取同一证据窗口的本地缓存。' : 'DeepSeek 雷达简报已生成并保存到本机数据库。');
+      setBriefMessage(result.cached ? '已读取同一时间窗口的本地简报。' : '论文简报已保存到本机数据库。');
       brief.refresh();
     } catch (reason) {
-      setBriefMessage(reason instanceof Error ? reason.message : '雷达简报生成失败。');
+      setBriefMessage(reason instanceof Error ? reason.message : '论文简报生成失败。');
     } finally {
       setBriefBusy(false);
     }
   };
 
-  return <div className="page-stack analytics-page scientific-analytics">
+  const palette = useChartPalette();
+  return <ChartPaletteContext.Provider value={palette}><div className="page-stack analytics-page scientific-analytics">
     <section className="command-strip analytics-command">
       <div><StatusBadge tone={error ? 'danger' : 'success'}>{error ? '统计异常' : '真实去重语料'}</StatusBadge><span>数据锚点 {data?.data_anchor || '—'} · 观测 {data?.range_from || '—'} 至 {data?.range_to || '—'}</span></div>
       <div><label>时间窗口<select value={days} onChange={(event) => setDays(Number(event.target.value))}>{windowOptions.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label><button className="icon-button" type="button" aria-label="刷新统计" onClick={() => { refresh(); bursts.refresh(); }}>↻</button></div>
@@ -358,22 +360,22 @@ export default function AnalyticsScientific({ onSelectMaterial, onSelectPaper }:
       </section>
 
       <section className="section-block analytics-panel ai-brief-panel">
-        <header className="section-header"><div><span className="section-kicker">DEEPSEEK EVIDENCE BRIEF</span><h2>AI 证据简报</h2></div><div className="ai-brief-actions"><StatusBadge tone={aiStatus.data?.configured ? 'success' : 'warning'}>{aiStatus.data?.configured ? aiStatus.data.fast_model : 'AI 未就绪'}</StatusBadge><button className="button primary" type="button" disabled={briefBusy || aiStatus.loading || !aiStatus.data?.configured} onClick={generateBrief}>{briefBusy ? '生成中…' : brief.data?.available ? '重新生成' : '生成雷达简报'}</button></div></header>
+        <header className="section-header"><h2>论文简报</h2><div className="ai-brief-actions"><StatusBadge tone={aiStatus.data?.configured ? 'success' : 'warning'}>{aiStatus.loading ? '读取配置中' : aiStatus.data?.configured ? '辅助解读可用' : '辅助解读未配置'}</StatusBadge><button className="button primary" type="button" disabled={briefBusy || aiStatus.loading || !aiStatus.data?.configured} onClick={generateBrief}>{briefBusy ? '生成中…' : brief.data?.available ? '重新生成' : '生成论文简报'}</button></div></header>
         {briefMessage && <p className="inline-message" role="status">{briefMessage}</p>}
         {brief.loading && <LoadingSkeleton rows={3} />}
         {brief.error && <ErrorState message={brief.error.message} offline={brief.error.code === 'offline'} onRetry={brief.refresh} />}
-        {!brief.loading && !brief.error && !brief.data?.available && <div className="ai-brief-empty"><strong>尚未生成这个窗口的简报</strong><p>DeepSeek 只读取最近 {Math.min(days, 90)} 天最多 20 篇本地论文证据。AI 负责归纳，不参与计数，也不会替代下面的统计口径。</p></div>}
+        {!brief.loading && !brief.error && !brief.data?.available && <div className="ai-brief-empty"><strong>此时间窗口尚无简报</strong><p>辅助解读服务将根据最近 {Math.min(days, 90)} 天内最多 20 篇本地论文的资料生成简报。</p></div>}
         {brief.data?.available && brief.data.analysis && <div className="ai-brief-content"><div className="ai-brief-summary"><small>{brief.data.evidence?.window_from || '—'} — {brief.data.evidence?.window_to || '—'} · 证据 {brief.data.evidence?.paper_count ?? 0} 篇 · {brief.data.cached ? '缓存' : '新生成'} · {formatDate(brief.data.updated_at, true)}</small><h3>{brief.data.analysis.headline}</h3><p>{brief.data.analysis.summary_zh}</p><div className="detail-tags">{brief.data.analysis.rising_topics.map((item) => <span className="tag" key={`topic-${item}`}>{item}</span>)}{brief.data.analysis.notable_materials.map((item) => <span className="tag material" key={`material-${item}`}>{item}</span>)}</div>{brief.data.analysis.caveats.length > 0 && <p className="ai-caveats">证据边界：{brief.data.analysis.caveats.join('；')}</p>}</div><div className="ai-reading-list"><strong>优先阅读</strong>{brief.data.analysis.papers_to_read.map((item) => <button type="button" key={item.canonical_paper_id} onClick={() => onSelectPaper(item.canonical_paper_id)}><span>{item.title}</span><small>{item.reason}</small></button>)}{!brief.data.analysis.papers_to_read.length && <p className="muted">模型没有在当前证据中指定优先论文。</p>}</div></div>}
       </section>
 
       <section className="analytics-section-heading" id="research-output"><div><span className="section-kicker">01 · RESEARCH OUTPUT</span><h2>整体研究产出与发表结构</h2></div><p>先判断数据库观测到的研究量是否变化，再拆解来源、方向和发表路径。</p></section>
-      <ChartPanel kicker="PAPER PULSE" title="论文产出脉冲" question="近期凝聚态论文量是在加速、减速，还是只是日常波动？" note="canonical paper 按日去重；柱状图显示版本结构，折线为 7 日移动平均。预印本与见刊版本可能同时属于同一论文。" className="timeline-panel"><PaperPulseChart data={data.paper_timeline} /></ChartPanel>
-      <div className="analytics-grid analytics-grid-three">
+      <div className="analytics-grid analytics-output-grid">
+        <ChartPanel kicker="PAPER PULSE" title="论文产出脉冲" question="近期凝聚态论文量是在加速、减速，还是只是日常波动？" note="canonical paper 按日去重；柱状图显示版本结构，折线为 7 日移动平均。预印本与见刊版本可能同时属于同一论文。" className="timeline-panel"><PaperPulseChart data={data.paper_timeline} /></ChartPanel>
         <ChartPanel kicker="SOURCE COVERAGE" title="数据源覆盖" question="当前窗口由哪些来源支撑，是否过度依赖单一来源？" note="每个来源内按 canonical paper 去重；同一论文可被多个来源收录，所以各柱之和可能超过论文总数。"><HorizontalDistributionChart data={data.source_distribution} label="来源覆盖论文数" /></ChartPanel>
         <ChartPanel kicker="FIELD MIX" title="研究方向构成" question="凝聚态内部的主要研究方向当前各占多少？" note={`每篇论文仅取一个主研究方向；来源主分类直接判定 ${Number(data.primary_field_quality?.direct_classification_pct ?? 0).toFixed(1)}%，文本推断 ${Number(data.primary_field_quality?.inferred_classification_pct ?? 0).toFixed(1)}%，其余保留为未分类。`}>{fieldData.length ? <FieldDistributionChart data={fieldData} /> : <ChartEmpty message="主研究方向分类正在从标题、摘要和来源类别构建。" />}</ChartPanel>
-        <ChartPanel kicker="JOURNAL SIGNAL" title="活跃期刊与平台" question="哪些发表载体贡献了最多可观察论文？" note="按窗口内 canonical paper 去重计数；这是载体活跃度，不是期刊质量或影响力排名。"><HorizontalDistributionChart data={data.journal_distribution} label="载体论文数" color="#c678dd" /></ChartPanel>
+        <ChartPanel kicker="JOURNAL SIGNAL" title="活跃期刊与平台" question="哪些发表载体贡献了最多可观察论文？" note="按窗口内 canonical paper 去重计数；这是载体活跃度，不是期刊质量或影响力排名。"><HorizontalDistributionChart data={data.journal_distribution} label="载体论文数" tone="publication" /></ChartPanel>
       </div>
-      <div className="analytics-grid">
+      <div className="analytics-grid analytics-grid-four">
         <ChartPanel kicker="SOURCE MIX SHIFT" title="来源构成漂移" question="本期与基线窗口的来源结构是否一致，热点比较是否受新数据源启用影响？" note="比较两个等长窗口的来源论文份额；总变差超过 15% 时，主题热点必须降级或按共同来源分层。">{data.source_window_distribution?.length ? <SourceShiftChart data={data.source_window_distribution} /> : <ChartEmpty message="缺少前后窗口来源份额，暂不能验证热点可比性。" />}</ChartPanel>
         <ChartPanel kicker="PUBLICATION PATHWAYS" title="预印本到见刊路径" question="研究成果主要如何从预印本流向正式发表，转化通常需要多久？" note="仅统计能够可靠归并预印本与见刊版本的论文；未匹配不等于未发表。">{data.publication_pathways?.length ? <PublicationPathwaysChart data={data.publication_pathways} /> : <ChartEmpty message="正在通过 DOI、arXiv ID、标题和作者证据归并发表路径。" />}</ChartPanel>
         <ChartPanel kicker="MONITOR ACTIVITY" title="监控规则命中" question="你的关注方向近期是否出现更多新论文？" note="仅反映用户监控规则的命中，不代表整个凝聚态领域热度。"><MonitorTimelineChart data={data.monitor_timeline} /></ChartPanel>
@@ -392,11 +394,11 @@ export default function AnalyticsScientific({ onSelectMaterial, onSelectPaper }:
       </div>
 
       <section className="analytics-section-heading" id="material-progress"><div><span className="section-kicker">03 · MATERIAL PROGRESS</span><h2>材料研究进展与成熟度信号</h2></div><p>区分“研究量大”“增长突然”和“预印本先行”，三者含义不同。</p></section>
-      <div className="analytics-grid">
+      <div className="analytics-grid analytics-grid-three">
         <ChartPanel kicker="MATERIAL VOLUME" title="材料论文量与版本结构" question="当前窗口哪些材料拥有最多研究活动，预印本与见刊如何构成？" note="去重论文、含预印本版本、含见刊版本为三组独立指标，后两者不可相加当作论文总数。">{materialCoverageComparable ? <MaterialVolumeChart data={data.top_materials} /> : <ChartEmpty message="材料抽取覆盖与基线不可比，当前不展示材料量排行，避免把漏抽取误当成低热度。" />}</ChartPanel>
         <ChartPanel kicker="MATERIAL STAGE" title="材料探索—沉淀矩阵" question="哪些材料更偏预印本探索，哪些已经出现较多正式见刊？" note="横轴为预印本版本数 /（预印本版本数 + 见刊版本数），是版本信号而非质量评分；气泡大小为证据片段数。">{materialCoverageComparable ? <MaterialStageChart data={data.top_materials} onSelect={onSelectMaterial} /> : <ChartEmpty message="材料抽取覆盖不可比，成熟度矩阵暂不绘制；零值不解释为没有研究。" />}</ChartPanel>
+        <ChartPanel kicker="BURST VS BASELINE" title="材料突发增长：近 30 日对比过去一年月均" question="哪些材料近期论文量明显高于自身常态，而不只是长期热门？" note="至少 2 篇独立论文证据；基线为过去 12 个月月均。该比值尚未校正全库月度规模，需与上方份额变化共同判断。" className="material-burst-wide">{!materialCoverageComparable ? <ChartEmpty message="前后窗口材料抽取覆盖不可比，当前不显示突发排名；补齐同口径抽取后再启用。" /> : bursts.loading ? <LoadingSkeleton rows={6} /> : bursts.error ? <ErrorState message={bursts.error.message} offline={bursts.error.code === 'offline'} onRetry={bursts.refresh} /> : burstItems.length ? <MaterialBurstChart data={burstItems} onSelect={onSelectMaterial} /> : <ChartEmpty message="当前没有满足两篇证据门槛的材料突发信号。" />}</ChartPanel>
       </div>
-      <ChartPanel kicker="BURST VS BASELINE" title="材料突发增长：近 30 日对比过去一年月均" question="哪些材料近期论文量明显高于自身常态，而不只是长期热门？" note="至少 2 篇独立论文证据；基线为过去 12 个月月均。该比值尚未校正全库月度规模，需与上方份额变化共同判断。" className="material-burst-wide">{!materialCoverageComparable ? <ChartEmpty message="前后窗口材料抽取覆盖不可比，当前不显示突发排名；补齐同口径抽取后再启用。" /> : bursts.loading ? <LoadingSkeleton rows={6} /> : bursts.error ? <ErrorState message={bursts.error.message} offline={bursts.error.code === 'offline'} onRetry={bursts.refresh} /> : burstItems.length ? <MaterialBurstChart data={burstItems} onSelect={onSelectMaterial} /> : <ChartEmpty message="当前没有满足两篇证据门槛的材料突发信号。" />}</ChartPanel>
 
       <section className="analytics-section-heading" id="data-quality"><div><span className="section-kicker">04 · COVERAGE &amp; QUALITY</span><h2>数据覆盖、去重与获取质量</h2></div><p>热点结论的可信度取决于摘要完整性、跨源交叉和身份归并，而不只是论文数量。</p></section>
       <DataQualitySummary data={data} />
@@ -405,10 +407,12 @@ export default function AnalyticsScientific({ onSelectMaterial, onSelectPaper }:
         <ChartPanel kicker="DOWNLOAD OUTCOME" title="下载任务结果" question="可见论文中哪些已下载、待处理、需要复核或没有合法 OA？" note="每篇论文只采用最新下载任务状态；未请求与失败严格区分，成功率只对已完成和失败任务计算。"><DownloadStatusChart data={data.download_status} /></ChartPanel>
         <ChartPanel kicker="QUALITY OVER TIME" title="数据质量趋势" question="随着持续扫描，摘要、OA、PDF 和去重覆盖是否真正改善？" note="每个时间点使用当时窗口内论文作为分母；历史快照缺失时不进行插值。">{data.quality_timeline && data.quality_timeline.length > 1 ? <QualityTimelineChart data={data.quality_timeline} /> : <ChartEmpty message="需要至少两个质量快照才能判断补全是否持续改善。" />}</ChartPanel>
       </div>
-      <ChartPanel kicker="DOWNLOAD SOURCE PERFORMANCE" title="下载来源成功率" question="哪些合法全文来源贡献最多成功下载，失败集中在哪里？" note="同时展示尝试数、完成数和成功率；小样本 100% 不能与大样本来源直接比较。">{data.download_source_performance?.length ? <DownloadSourcePerformanceChart data={data.download_source_performance} /> : <ChartEmpty message="还没有足够下载任务形成来源级成功率。" />}</ChartPanel>
-      <ChartPanel kicker="CROSS-SOURCE VALIDATION" title="数据源交叉覆盖矩阵" question="不同来源能互相验证多少论文，各自还贡献了多少独有记录？" note="格内显示占行来源的比例；悬停同时显示共同论文计数、行来源总数和比例。采用 canonical paper 身份归并，对角线为 100%。" className="source-overlap-wide">{data.source_overlap?.sources?.length ? <SourceOverlapChart data={data.source_overlap} /> : <ChartEmpty message="至少两个数据源完成身份归并后才显示交叉覆盖；没有矩阵时不得声称全网不重不漏。" />}</ChartPanel>
+      <div className="analytics-grid analytics-evidence-grid">
+        <ChartPanel kicker="DOWNLOAD SOURCE PERFORMANCE" title="下载来源成功率" question="哪些合法全文来源贡献最多成功下载，失败集中在哪里？" note="同时展示尝试数、完成数和成功率；小样本 100% 不能与大样本来源直接比较。">{data.download_source_performance?.length ? <DownloadSourcePerformanceChart data={data.download_source_performance} /> : <ChartEmpty message="还没有足够下载任务形成来源级成功率。" />}</ChartPanel>
+        <ChartPanel kicker="CROSS-SOURCE VALIDATION" title="数据源交叉覆盖矩阵" question="不同来源能互相验证多少论文，各自还贡献了多少独有记录？" note="格内显示占行来源的比例；悬停同时显示共同论文计数、行来源总数和比例。采用 canonical paper 身份归并，对角线为 100%。" className="source-overlap-wide">{data.source_overlap?.sources?.length ? <SourceOverlapChart data={data.source_overlap} /> : <ChartEmpty message="至少两个数据源完成身份归并后才显示交叉覆盖；没有矩阵时不得声称全网不重不漏。" />}</ChartPanel>
+      </div>
 
       <p className="analytics-footnote">生成 {formatDate(data.generated_at, true)} · 界面刷新 {updatedAt ? formatDate(updatedAt.toISOString(), true) : '—'} · 默认只统计真实、凝聚态 eligible、按 canonical paper 去重的记录。图表用于发现信号，不构成科研结论。</p>
     </>}
-  </div>;
+  </div></ChartPaletteContext.Provider>;
 }

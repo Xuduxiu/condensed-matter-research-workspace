@@ -4,6 +4,7 @@ import { useApiData, useDebouncedValue } from '../hooks';
 import { MaterialSummary } from '../types';
 import MaterialRow from '../components/MaterialRow';
 import { EmptyState, ErrorState, LoadingSkeleton, StatusBadge } from '../components/primitives';
+import '../styles/operations-layout.css';
 
 const views = [
   ['hot', '综合热点'], ['preprint', '预印本先行'], ['publication', '见刊加速'], ['burst', '突发增长'], ['persistent', '持续研究'],

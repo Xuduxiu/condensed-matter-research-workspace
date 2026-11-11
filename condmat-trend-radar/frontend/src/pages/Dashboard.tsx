@@ -2,11 +2,15 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { apiGet, apiPostJson } from '../api';
 import { formatDate, useApiData } from '../hooks';
 import { DailyRun, DashboardData, ImmediateDownloadResponse, LiveScanStatus, PaperSummary } from '../types';
-import MaterialRow from '../components/MaterialRow';
 import PaperRow from '../components/PaperRow';
-import { ErrorState, LoadingSkeleton, MetricStrip, RunSummary, StatusBadge } from '../components/primitives';
+import { ErrorState, LoadingSkeleton, RunSummary, TrendIndicator } from '../components/primitives';
 import { getAbstractBackfillProgress, getSourceBackfillProgress, isTerminalDailyRunStatus, newestDailyRun, sourceDisplayName } from '../runProgress';
+import '../styles/dashboard.css';
 const Analytics = lazy(() => import('./AnalyticsScientific'));
+
+function count(value: number | undefined) {
+  return value == null ? '—' : value.toLocaleString('zh-CN');
+}
 
 const stageLabels: Record<string, string> = {
   queued: '等待扫描', fetching_sources: '正在交叉扫描多源论文', auditing_source_coverage: '正在核对多源覆盖',
@@ -191,18 +195,55 @@ export default function Dashboard({ onSelectPaper, onSelectMaterial }: { onSelec
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : '扫描间隔保存失败。'); }
   };
 
-  return <div className="page-stack dashboard-page">
-    <div className="tab-bar dashboard-view-tabs" role="tablist" aria-label="总览视图"><button type="button" role="tab" aria-selected={view === 'today'} className={view === 'today' ? 'active' : ''} onClick={() => setView('today')}>今日雷达</button><button type="button" role="tab" aria-selected={view === 'analytics'} className={view === 'analytics' ? 'active' : ''} onClick={() => setView('analytics')}>统计洞察</button></div>
-    {view === 'today' ? <>
-    <section className="command-strip live-command-strip">
-      <div><StatusBadge tone={visibleRun?.status === 'failed' ? 'danger' : activeRun ? 'warning' : 'success'}>{stageLabels[stage] || visibleRun?.status || '空闲'}</StatusBadge><span>论文库变更 {formatDate(data?.last_updated_at, true)}</span><span className="muted">界面刷新 {updatedAt ? formatDate(updatedAt.toISOString(), true) : '—'}</span></div>
-      <div><button className={`live-toggle ${liveData?.enabled ? 'active' : ''}`} type="button" onClick={setLiveEnabled}>{liveData?.enabled ? '● 自动扫描开启' : '○ 自动扫描暂停'}</button><select aria-label="自动扫描间隔" value={Math.round((liveData?.interval_seconds ?? 900) / 60)} onChange={(event) => setIntervalMinutes(Number(event.target.value))}><option value="5">5 分钟</option><option value="15">15 分钟</option><option value="30">30 分钟</option><option value="60">60 分钟</option></select><button className="button primary" type="button" disabled={running || Boolean(activeRun)} onClick={updateNow}>{running ? '启动中…' : activeRun ? '扫描进行中' : '立即实时扫描'}</button></div>
-    </section>
+  const metrics = data?.metrics;
+  const queueCounts = metrics && [
+    ['今日预印本转见刊', metrics.preprint_to_publication],
+    ['今日下载成功', metrics.downloads_completed],
+    ['待处理下载', metrics.download_pending],
+    ['下载失败', metrics.download_failed],
+    ['待人工复核', metrics.manual_reviews],
+  ] as const;
+  const scanState = stageLabels[stage] || visibleRun?.status || '空闲';
+  const progressPercent = Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
 
-    {visibleRun && <section className="scan-progress-card" aria-live="polite">
-      <div><strong>{stageLabels[stage] || stage}</strong><span>{Math.max(0, Math.min(100, percent))}%</span></div>
-      <div className="scan-progress-track"><i style={{ width: `${Math.max(2, Math.min(100, percent))}%` }} /></div>
-      <p>模式：{scanModeLabel} · {progressFacts} · 下一次自动扫描 {formatDate(liveData?.next_scan_at, true)}</p>
+  return <div className="page-stack dashboard-page desk-overview">
+    <header className="desk-overview__toolbar">
+      <div className="desk-overview__tabs" role="tablist" aria-label="总览视图">
+        <button type="button" role="tab" aria-selected={view === 'today'} onClick={() => setView('today')}>今日雷达</button>
+        <button type="button" role="tab" aria-selected={view === 'analytics'} onClick={() => setView('analytics')}>统计洞察</button>
+      </div>
+      {view === 'today' && <div className="desk-overview__scan-actions">
+        <span className="desk-overview__scan-state" data-state={activeRun ? 'running' : visibleRun?.status || 'idle'}>{scanState}</span>
+        <button className="button primary" type="button" disabled={running || Boolean(activeRun)} onClick={updateNow}>{running ? '启动中…' : activeRun ? '扫描进行中' : '立即实时扫描'}</button>
+      </div>}
+    </header>
+    {view === 'today' ? <div className="desk-overview__today">
+    {data && metrics && <dl className="desk-overview__figures" aria-label="收录与监控">
+      <div>
+        <dt>最新数据日论文</dt>
+        <dd>{count(metrics.latest_day_papers ?? metrics.new_papers)}<small>篇</small></dd>
+        <dd>{count(metrics.latest_day_preprints ?? metrics.new_preprints)} 篇预印本 <span>·</span> {count(metrics.latest_day_publications ?? metrics.new_publications)} 篇正式见刊</dd>
+      </div>
+      <div>
+        <dt>近七日论文</dt>
+        <dd>{count(metrics.papers_7d ?? metrics.latest_scan_versions)}<small>篇</small></dd>
+        {data.metrics_range_from && data.latest_data_date && <dd><time>{data.metrics_range_from}</time> 至 <time>{data.latest_data_date}</time></dd>}
+      </div>
+      <div>
+        <dt>今日监控新命中</dt>
+        <dd>{count(metrics.monitor_new_hits)}<small>条</small></dd>
+        <dd><time>{data.today}</time></dd>
+      </div>
+    </dl>}
+    <div className="desk-overview__work">
+    {data?.latest_data_date && data.latest_data_date !== data.today &&
+      <p className="desk-overview__lag">今日尚无可入库的论文数据，收录统计截至 <time>{data.latest_data_date}</time>。</p>}
+
+    {visibleRun && <details className="desk-overview__progress" key={activeRun?.id || 'last-run'} open={Boolean(activeRun)}>
+      <summary><span>{activeRun ? '本次扫描' : '上次扫描'}</span><strong>{stageLabels[stage] || stage} · {progressPercent}%</strong></summary>
+      <section className="scan-progress-card" aria-live="polite">
+      <div className="scan-progress-track"><i style={{ width: `${progressPercent}%` }} /></div>
+      <p>{scanModeLabel} · {progressFacts} · 下次自动扫描 {formatDate(liveData?.next_scan_at, true)}</p>
       {isSourceBackfill && sourceBackfill.available && <div className="source-backfill-progress" aria-label="缺失来源补齐进度">
         <div><strong>缺失来源补齐</strong><span>{sourceBackfill.requested == null ? `已处理 ${sourceBackfill.processed ?? 0}` : `${sourceBackfill.processed ?? 0} / ${sourceBackfill.requested}`}{sourceBackfill.currentSource ? ` · 当前 / 刚处理 ${sourceDisplayName(sourceBackfill.currentSource)}` : ''}</span></div>
         <div className="source-backfill-track"><i style={{ width: `${sourceBackfill.percent == null ? 0 : Math.max(2, sourceBackfill.percent)}%` }} /></div>
@@ -212,34 +253,64 @@ export default function Dashboard({ onSelectPaper, onSelectMaterial }: { onSelec
         <div><strong>缺失摘要补全</strong><span>{abstractBackfill.total == null ? `已处理 ${abstractBackfill.processed ?? 0}` : `${abstractBackfill.processed ?? 0} / ${abstractBackfill.total}`}{abstractBackfill.currentSource ? ` · 当前 / 刚处理 ${sourceDisplayName(abstractBackfill.currentSource)}` : ''}</span></div>
         <div className="source-backfill-track"><i style={{ width: `${abstractBackfill.percent == null ? 0 : Math.max(2, abstractBackfill.percent)}%` }} /></div>
         <dl><div><dt>补全</dt><dd>{abstractBackfill.enriched ?? 0}</dd></div><div><dt>未找到</dt><dd>{abstractBackfill.notFound ?? 0}</dd></div><div><dt>失败</dt><dd>{abstractBackfill.failed ?? 0}</dd></div>{abstractBackfill.queueRemaining != null && <div><dt>本批剩余</dt><dd>{abstractBackfill.queueRemaining}</dd></div>}{abstractBackfill.currentPaperId && <div className="pipeline-current-paper"><dt>当前论文</dt><dd title={abstractBackfill.currentPaperId}>{abstractBackfill.currentPaperId}</dd></div>}</dl>
-      </div>}    </section>}
-
-    {data?.latest_data_date && data.latest_data_date !== data.today && <div className="data-lag-notice"><StatusBadge tone="neutral">数据日 {data.latest_data_date}</StatusBadge><span>当天论文源尚未发布可入库记录；总览已自动使用最近有数据日，并保留扫描进度作为实时状态。</span></div>}
+      </div>}
+      </section>
+    </details>}
 
     {message && <p className="inline-message" role="status">{message}</p>}
-    {loading && <LoadingSkeleton rows={8} />}
+    {loading && !data && <LoadingSkeleton rows={5} />}
     {error && <ErrorState message={error.message} offline={error.code === 'offline'} onRetry={refresh} />}
-    {data && <>
-      <MetricStrip items={[
-        { label: `最新数据日论文 ${data.latest_data_date?.slice(5) || ''}`, value: data.metrics.latest_day_papers ?? data.metrics.new_papers, tone: 'accent' },
-        { label: '最新日预印本', value: data.metrics.latest_day_preprints ?? data.metrics.new_preprints, tone: 'preprint' },
-        { label: '最新日正式见刊', value: data.metrics.latest_day_publications ?? data.metrics.new_publications, tone: 'publication' },
-        { label: '近 7 日论文', value: data.metrics.papers_7d ?? data.metrics.latest_scan_versions, tone: 'accent' },
-        { label: '今日监控新命中', value: data.metrics.monitor_new_hits, tone: 'warning' },
-        { label: '预印本转见刊', value: data.metrics.preprint_to_publication },
-        { label: '自动下载成功', value: data.metrics.downloads_completed, tone: 'success' },
-        { label: '待处理下载', value: data.metrics.download_pending, tone: 'warning' },
-        { label: '下载失败', value: data.metrics.download_failed, tone: 'danger' },
-        { label: '待人工复核', value: data.metrics.manual_reviews, tone: 'warning' },
-      ]} />
-      <div className="dashboard-grid">
-        <section className="section-block attention-block"><header className="section-header"><div><span className="section-kicker">PAPER SIGNALS</span><h2>实时发现论文</h2></div><span className="muted">按本地最新版本日期排序</span></header><div className="paper-list">{data.spotlight.map((paper) => <PaperRow key={paper.paper_version_id} paper={paper} onOpen={() => onSelectPaper(paper.canonical_paper_id)} onDownload={() => enqueue(paper)} onMonitor={() => monitor(paper)} />)}</div></section>
-        <div className="dashboard-side">
-          <section className="section-block materials-compact"><header className="section-header"><div><span className="section-kicker">PAPER-DERIVED MATERIALS</span><h2>论文材料变化</h2></div><small>数据锚点 {data.material_data_anchor || '—'}</small></header><div>{data.hot_materials.map((material, index) => <MaterialRow key={material.id} material={material} rank={index + 1} onOpen={() => onSelectMaterial(material.id)} />)}</div><p className="data-note">材料来自论文标题/摘要抽取及证据链接，不展示零论文的预设实体。</p></section>
-          <section className="section-block run-block"><header className="section-header"><div><span className="section-kicker">SCAN PIPELINE</span><h2>最近扫描摘要</h2></div></header><RunSummary run={visibleRun} /></section>
-        </div>
-      </div>
-    </>}
-    </> : <Suspense fallback={<LoadingSkeleton rows={8} />}><Analytics onSelectMaterial={onSelectMaterial} onSelectPaper={onSelectPaper} /></Suspense>}
+    <div className="desk-overview__columns">
+      {data && <section className="desk-overview__papers">
+        <header className="desk-overview__heading"><h2>最近论文</h2><span>按论文版本日期排序</span></header>
+        {data.spotlight.length ? <div className="desk-overview__paper-list">{data.spotlight.map((paper) =>
+          <PaperRow key={paper.paper_version_id} paper={paper} onOpen={() => onSelectPaper(paper.canonical_paper_id)} onDownload={() => enqueue(paper)} onMonitor={() => monitor(paper)} />)}</div>
+          : <p className="desk-overview__empty">资料库中暂无可展示的论文。</p>}
+      </section>}
+      <aside className="desk-overview__rail" aria-label="材料与扫描">
+        {data && <section>
+          <header className="desk-overview__heading"><h2>材料动向</h2>{data.material_data_anchor && <span>截至 {data.material_data_anchor}</span>}</header>
+          {data.hot_materials.length > 0 ? <div className="desk-overview__materials">
+            <div className="desk-overview__material-head"><span>材料</span><span>近 7 日</span><span>近 30 日</span></div>
+            {data.hot_materials.map(material => <details className="desk-overview__material" key={material.id}>
+              <summary><span>{material.canonical_name}</span><b>{count(material.count_7d)}</b><b>{count(material.count_30d)}</b></summary>
+              <div className="desk-overview__material-detail">
+                <p>{[material.material_family, material.phase].filter(Boolean).join(' · ')} · {count(material.evidence_mentions ?? material.total_papers)} 条证据</p>
+                <dl>
+                  <div><dt>月基线</dt><dd>{count(material.monthly_baseline)}</dd></div>
+                  <div><dt>预印本变化</dt><dd><TrendIndicator value={material.preprint_change} /></dd></div>
+                  <div><dt>见刊变化</dt><dd><TrendIndicator value={material.publication_change} /></dd></div>
+                  <div><dt>综合趋势</dt><dd><TrendIndicator value={Math.round(material.trend_score * 100)} /></dd></div>
+                  <div><dt>最近论文</dt><dd>{material.latest_paper_date || '—'}</dd></div>
+                </dl>
+                <button type="button" className="button secondary" onClick={() => onSelectMaterial(material.id)}>查看材料详情</button>
+              </div>
+            </details>)}
+          </div> : <p className="desk-overview__empty">当前论文尚未形成材料趋势。</p>}
+        </section>}
+        <section className="desk-overview__scans">
+          <header className="desk-overview__heading"><h2>自动扫描</h2></header>
+          <div className="desk-overview__schedule">
+            <button type="button" className="desk-overview__toggle" aria-pressed={Boolean(liveData?.enabled)} disabled={!liveData} onClick={setLiveEnabled}>
+              <i aria-hidden="true" />{liveData ? liveData.enabled ? '自动扫描已开启' : '自动扫描已暂停' : '读取设置中'}
+            </button>
+            <select aria-label="自动扫描间隔" disabled={!liveData} value={Math.round((liveData?.interval_seconds ?? 900) / 60)} onChange={(event) => setIntervalMinutes(Number(event.target.value))}>
+              {[5, 15, 30, 60].map(minutes => <option key={minutes} value={minutes}>{minutes} 分钟</option>)}
+            </select>
+          </div>
+          <p className="desk-overview__updated">资料库更新 <time>{formatDate(data?.last_updated_at, true)}</time></p>
+          <details className="desk-overview__details"><summary>最近扫描摘要</summary>
+            <p className="desk-overview__updated">界面刷新 <time>{updatedAt ? formatDate(updatedAt.toISOString(), true) : '—'}</time></p>
+            <RunSummary run={visibleRun} />
+          </details>
+          {metrics && queueCounts && <details className="desk-overview__details">
+            <summary>下载与复核{(metrics.download_pending > 0 || metrics.download_failed > 0 || metrics.manual_reviews > 0) && <small>有待处理项</small>}</summary>
+            <dl>{queueCounts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{count(value)}</dd></div>)}</dl>
+          </details>}
+        </section>
+      </aside>
+    </div>
+    </div>
+    </div> : <Suspense fallback={<LoadingSkeleton rows={8} />}><Analytics onSelectMaterial={onSelectMaterial} onSelectPaper={onSelectPaper} /></Suspense>}
   </div>;
 }

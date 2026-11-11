@@ -4,6 +4,37 @@
 
 主应用 **Condensed Matter Radar** 使用 FastAPI + React + TypeScript + SQLite，在同一界面中提供论文发现、材料与主题统计、版本关联、下载队列、监控条件、全文检索和人工复核。`lab_paper_intake` 保留为旧版工具、迁移来源与回归对照。
 
+## 在 DeepSeek Harness 中使用
+
+在 DSH 顶栏“编辑”右侧打开“文献”，**凝态文献台（CondMat Paper Desk）** 会铺满标题栏下方的窗口。工作台、发现、文献库、材料、监控和系统共用一个导航栏。点击标题栏的“返回 DSH”，即可恢复进入前的会话和侧栏布局。检索、PDF 下载和 Zotero 导出共用论文主应用的 SQLite 资料库和队列。项目 XID-16 为 `TH7DP0X71X9BTRRT`，可在“系统”页查看。
+
+文献台沿用 DSH「外观」里的主题。当前视觉主题插件提供**罗德岛 · 白昼、罗德岛 · 黑夜、终末地 · 协议玻璃、XLab · 实验室**。在文献台右上角点「外观」即可使用同一个宿主选择器，已打开的页面和统计图会立即换色。启用“跟随系统”时，文献台跟随 DSH 解析后的深浅色。在浏览器独立运行时使用文献台自己的配色。[四套主题桌面实拍](docs/dsh-paper-desk-themes.png)
+
+布局按窗口里实际可用的宽度调整。超宽屏上，发现和文献库把筛选放在左侧，论文卡片和统计图自动增列。表格空间充足时，当前页按原顺序分为并排的表，每栏都有表头和记录范围。打开论文详情会为阅读栏留出位置，缩窄窗口或提高显示缩放时，主区会重新排版。[3440 × 1440 桌面预览](docs/dsh-paper-desk-ultrawide.png)
+
+### 自动中文翻译
+
+在「文献库 → 中文翻译」开启自动翻译后，当前资料库的真实论文版本会分批处理，新导入的标题和摘要也会自动加入队列。译文保存在本机 SQLite，列表优先显示已有中文，详情中可查看原文。没有摘要时先译标题，后续补入摘要再处理。相同原文复用已有译文，PDF 正文、阅读笔记和聊天记录不参与翻译。
+
+翻译使用 DSH 当前选定的模型和供应商。调用以论文元数据为输入，不需要为文献台复制密钥。DSH 退出期间，待办和进度仍在数据库中；下次启动 DSH 时，已开启自动翻译的资料库会恢复处理。可在同一页查看队列、模型状态和用量。执行前的 token 数是估算，实际用量以供应商返回值为准。
+
+在下方源码安装步骤准备好 Python 及前端依赖后，从仓库根目录执行：
+
+```powershell
+pnpm.cmd --dir condmat-trend-radar/frontend run build
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\dsh-paper-desk\install.ps1
+```
+
+安装后查看 DSH 顶栏。如果已有窗口仍显示旧版界面，可在“应用”菜单中刷新页面。插件链接到当前仓库，移动目录后需要重新运行安装命令。首次打开文献页面时，DSH 按需启动本机论文服务，退出宿主时释放服务。在 DSH 插件管理中可停用“凝态文献台”。隔离验收库的桌面实拍可查看[宽窗口](docs/dsh-paper-desk.png)和[窄窗口](docs/dsh-paper-desk-narrow.png)。
+
+插件回归入口为 `node --test dsh-paper-desk/test/*.test.mjs`。安装 Playwright 和 Chromium 后，可运行 `node dsh-paper-desk/test/workspace_e2e.mjs` 验证六个页面及读写流程。已安装 DSH 的 Windows 电脑还可运行 `node dsh-paper-desk/test/desktop_e2e.mjs` 验证真实桌面菜单、安装和返回操作。联网验收使用 `condmat-trend-radar\.venv\Scripts\python.exe dsh-paper-desk\test\live_sources.py`，在临时资料库查询 OpenAlex、Crossref、arXiv，下载一份公开 PDF 并检查 Zotero 压缩包。
+
+桌面已安装视觉主题插件时，运行 `node dsh-paper-desk/test/desktop_e2e.mjs --themes` 可在隔离配置中检验四套原生主题、跟随系统和已打开图表的实时配色。
+
+同一桌面测试支持 `--ultrawide`。它会调整隔离 Electron 窗口的 CSS 视口，检验超宽屏六页布局、分栏阅读顺序、勾选状态及详情开合。Windows 显示缩放和应用缩放会影响同一物理屏幕的可用 CSS 宽度。
+
+`node dsh-paper-desk/test/desktop_e2e.mjs --translation-runtime` 用隔离的 DSH 配置验证模型接入、自动翻译开关和重启续跑。`node dsh-paper-desk/test/translations_e2e.mjs` 验证翻译界面。`condmat-trend-radar\.venv\Scripts\python.exe dsh-paper-desk\test\translation_scale.py` 用十万个合成版本验证队列规模、去重和增量更新。这三项测试均不产生模型推理费用。
+
 ## 功能
 
 - 从 OpenAlex、Crossref、arXiv 获取真实论文元数据。

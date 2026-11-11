@@ -1,0 +1,51 @@
+.translation-workspace { min-width: 0; background: var(--surface); }
+.translation-entry, .translation-auto-line, .translation-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.translation-entry { justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.translation-entry h2, .translation-workspace h3, .translation-reading h4 { margin: 0; color: var(--text-primary); }
+.translation-entry h2 { font-size: 16px; }
+.translation-workspace h3 { font-size: 14px; }
+.translation-auto-line > label { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.translation-auto-line input, .translation-workspace progress { accent-color: var(--accent); }
+.translation-auto-line > strong { color: var(--accent); font-size: 12px; }
+.translation-automatic, .translation-batch-body { display: grid; min-width: 0; gap: 10px; padding: 12px 16px; }
+.translation-batch-body { border-top: 1px solid var(--border); }
+.translation-auto-settings summary { width: fit-content; cursor: pointer; color: var(--text-secondary); font-size: 12px; }
+.translation-auto-settings[open] summary { margin-bottom: 8px; }
+.translation-hint, .translation-auto-counts, .translation-error, .translation-version, .translation-options label { margin: 0; font-size: 12px; line-height: 1.6; }
+.translation-hint, .translation-auto-counts, .translation-options label, .translation-version { color: var(--text-secondary); }
+.translation-auto-counts { font-variant-numeric: tabular-nums; }
+.translation-error { overflow-wrap: anywhere; color: var(--danger); }
+.translation-workspace progress { display: block; width: 100%; max-width: 65rem; height: 7px; }
+.translation-options { display: flex; flex-wrap: wrap; align-items: end; gap: 8px 14px; }
+.translation-options label, .translation-version { display: grid; min-width: 0; gap: 3px; }
+.translation-options :is(input, select), .translation-version select {
+  box-sizing: border-box; max-width: 100%; min-width: 0; height: 32px; padding: 3px 8px;
+  border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface-raised); color: var(--text-primary); font: inherit;
+}
+.translation-options input { width: 10em; }
+.translation-version { max-width: 100%; }
+.translation-jobs > .translation-version { width: min(100%, 26rem); }
+.translation-estimate, .translation-jobs { display: grid; min-width: 0; gap: 9px; padding-top: 12px; border-top: 1px solid var(--border); }
+.translation-estimate > button { justify-self: start; }
+.translation-numbers { display: flex; flex-wrap: wrap; gap: 9px 24px; margin: 0; }
+.translation-numbers dt { color: var(--text-secondary); font-size: 12px; }
+.translation-numbers dd { margin: 3px 0 0; color: var(--text-primary); font: 600 15px/1.4 var(--font-mono); }
+.translation-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 12px; font-size: 13px; }
+.translation-progress span { color: var(--text-secondary); }
+.translation-progress progress { flex-basis: 100%; }
+.paper-translation { display: grid; min-width: 0; gap: 9px; }
+.paper-translation .translation-actions > span { color: var(--text-secondary); font-size: 12px; }
+.translation-reading { display: grid; gap: 12px; }
+.translation-reading > div { min-width: 0; border-inline-start: 2px solid var(--border-strong); padding-inline-start: 10px; overflow-wrap: anywhere; }
+.translation-reading > div:first-child { border-inline-start-color: var(--accent); }
+.translation-reading h4 { font-size: 12px; color: var(--text-secondary); }
+.translation-reading strong, .translation-reading p { display: block; margin: 6px 0 0; line-height: 1.65; white-space: pre-wrap; }
+@media (max-width: 600px) {
+  .translation-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.25rem), 1fr)); }
+  .translation-options :is(input, select) { width: 100%; }
+}

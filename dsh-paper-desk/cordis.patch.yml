@@ -1,0 +1,3 @@
+- insert:
+    - id: paper-desk
+      name: '@local/dsh-paper-desk'

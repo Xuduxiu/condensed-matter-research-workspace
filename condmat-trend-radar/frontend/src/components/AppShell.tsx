@@ -1,8 +1,8 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { DetailSelection } from '../types';
 import MaterialDetailPanel from './MaterialDetailPanel';
 import PaperDetailPanel from './PaperDetailPanel';
-import Sidebar, { AppRoute } from './Sidebar';
+import WorkspaceNav, { AppRoute } from './Sidebar';
 import TopBar from './TopBar';
 
 type Props = {
@@ -16,6 +16,8 @@ type Props = {
 };
 
 export default function AppShell({ route, children, detail, onNavigate, onCloseDetail, onSelectPaper, onSelectMaterial }: Props) {
+  const content = useRef<HTMLElement>(null);
+  useEffect(() => { content.current?.scrollTo(0, 0); }, [route]);
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && detail) onCloseDetail();
@@ -25,11 +27,13 @@ export default function AppShell({ route, children, detail, onNavigate, onCloseD
   }, [detail, onCloseDetail]);
 
   return (
-    <div className={`app-shell ${detail ? 'detail-open' : ''}`}>
-      <Sidebar active={route} onNavigate={onNavigate} />
-      <main className="workspace" id="main-content">
-        <TopBar route={route} hasDetail={Boolean(detail)} onCloseDetail={onCloseDetail} />
-        <div className="workspace-scroll">{children}</div>
+    <div className={`desk-shell ${detail ? 'detail-open' : ''}`}>
+      <WorkspaceNav active={route} onNavigate={onNavigate} />
+      <main className="desk-content" ref={content} id="main-content">
+        <div className="desk-page">
+          <TopBar route={route} hasDetail={Boolean(detail)} onCloseDetail={onCloseDetail} />
+          {children}
+        </div>
       </main>
       {detail && <button className="detail-backdrop" type="button" aria-label="关闭详情" onClick={onCloseDetail} />}
       <aside className={`detail-panel ${detail ? 'is-open' : ''}`} aria-label="详情面板" aria-hidden={!detail}>

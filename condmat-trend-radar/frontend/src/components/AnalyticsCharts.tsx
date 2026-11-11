@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import * as echarts from 'echarts/core';
 import { BarChart, HeatmapChart, LineChart, PieChart, ScatterChart } from 'echarts/charts';
 import {
@@ -10,7 +10,9 @@ import {
   VisualMapComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
+import { LabelLayout } from 'echarts/features';
 import type { EChartsCoreOption } from 'echarts/core';
+import { useChart, type ChartPalette } from './chartTheme';
 
 echarts.use([
   BarChart,
@@ -24,6 +26,7 @@ echarts.use([
   MarkLineComponent,
   TooltipComponent,
   VisualMapComponent,
+  LabelLayout,
   CanvasRenderer,
 ]);
 
@@ -82,58 +85,6 @@ export type PublicationPathway = {
   median_lag_days?: number | null;
 };
 
-const axisText = '#9facbf';
-const bodyText = '#dce6f4';
-const gridLine = '#253247';
-const colors = ['#61afef', '#c678dd', '#56b6c2', '#98c379', '#e5c07b', '#e06c75', '#7c83ff', '#73d4aa'];
-
-function tooltipBase() {
-  return {
-    backgroundColor: '#111925',
-    borderColor: '#34445b',
-    textStyle: { color: '#eef4ff', fontSize: 11 },
-    extraCssText: 'box-shadow:0 10px 28px rgba(0,0,0,.35);',
-  };
-}
-
-function categoryAxis(data: string[], rotate = 0) {
-  return {
-    type: 'category' as const,
-    data,
-    axisLabel: { color: axisText, rotate, hideOverlap: true },
-    axisLine: { lineStyle: { color: gridLine } },
-    axisTick: { show: false },
-  };
-}
-
-function valueAxis(name?: string) {
-  return {
-    type: 'value' as const,
-    name,
-    nameTextStyle: { color: axisText },
-    minInterval: 1,
-    axisLabel: { color: axisText },
-    splitLine: { lineStyle: { color: gridLine } },
-  };
-}
-
-function useChart(option: EChartsCoreOption | null, onClick?: (params: unknown) => void) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!ref.current || !option) return undefined;
-    const chart = echarts.init(ref.current);
-    chart.setOption(option);
-    if (onClick) chart.on('click', onClick);
-    const observer = new ResizeObserver(() => chart.resize());
-    observer.observe(ref.current);
-    return () => {
-      observer.disconnect();
-      chart.dispose();
-    };
-  }, [option, onClick]);
-  return ref;
-}
-
 function movingAverage(values: number[], width: number) {
   return values.map((_, index) => {
     const start = Math.max(0, index - width + 1);
@@ -143,12 +94,12 @@ function movingAverage(values: number[], width: number) {
 }
 
 export function PaperPulseChart({ data }: { data: TimelinePoint[] }) {
-  const option = useMemo<EChartsCoreOption>(() => {
+  const option = useCallback(({ token, axisText, tooltip, categoryAxis, valueAxis }: ChartPalette): EChartsCoreOption => {
     const rolling = movingAverage(data.map((item) => item.total), 7);
     return {
       animationDuration: 450,
-      color: [colors[0], colors[1], colors[3]],
-      tooltip: { ...tooltipBase(), trigger: 'axis' },
+      color: [token.preprint, token.publication, token.success],
+      tooltip: { ...tooltip, trigger: 'axis' },
       legend: { top: 0, right: 0, textStyle: { color: axisText }, data: ['预印本', '正式见刊', '7 日均线'] },
       grid: { left: 48, right: 22, top: 44, bottom: 42 },
       xAxis: categoryAxis(data.map((item) => item.date.slice(5))),
@@ -164,11 +115,11 @@ export function PaperPulseChart({ data }: { data: TimelinePoint[] }) {
   return <div className="analytics-chart analytics-chart-wide" ref={ref} role="img" aria-label="逐日论文量、版本结构和七日移动平均" />;
 }
 
-export function HorizontalDistributionChart({ data, label, color = colors[2], limit = 12 }: { data: Distribution[]; label: string; color?: string; limit?: number }) {
+export function HorizontalDistributionChart({ data, label, tone = 'accent', limit = 12 }: { data: Distribution[]; label: string; tone?: 'accent' | 'publication'; limit?: number }) {
   const items = useMemo(() => data.filter((item) => item.count > 0).slice(0, limit).reverse(), [data, limit]);
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: [color],
-    tooltip: { ...tooltipBase(), trigger: 'axis', axisPointer: { type: 'shadow' } },
+  const option = useCallback(({ token, axisText, tooltip, categoryAxis, valueAxis }: ChartPalette): EChartsCoreOption => ({
+    color: [token[tone]],
+    tooltip: { ...tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
     grid: { left: 142, right: 30, top: 16, bottom: 32 },
     xAxis: valueAxis('论文数'),
     yAxis: {
@@ -176,7 +127,7 @@ export function HorizontalDistributionChart({ data, label, color = colors[2], li
       axisLabel: { color: axisText, width: 124, overflow: 'truncate' },
     },
     series: [{ name: label, type: 'bar', data: items.map((item) => item.count), barMaxWidth: 17, itemStyle: { borderRadius: [0, 3, 3, 0] } }],
-  }), [color, items, label]);
+  }), [tone, items, label]);
   const ref = useChart(option);
   return <div className="analytics-chart" ref={ref} role="img" aria-label={label} />;
 }
@@ -187,17 +138,18 @@ export function DownloadStatusChart({ data }: { data: Array<{ status: string; co
     retryable_failed: '可重试失败', permanent_failed: '无合法 OA', manual_review: '人工复核', not_requested: '未请求',
   };
   const items = data.filter((item) => item.count > 0).map((item) => ({ ...item, label: statusLabel[item.status] || item.status }));
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: items.map((item) => item.status === 'completed' ? colors[3] : item.status.includes('failed') ? colors[5] : item.status === 'not_requested' ? '#536176' : colors[4]),
-    tooltip: { ...tooltipBase(), trigger: 'item', formatter: '{b}<br/>{c} 篇 · {d}%' },
-    legend: { type: 'scroll', bottom: 0, textStyle: { color: axisText, fontSize: 10 } },
+  const option = useCallback(({ token, bodyText, axisText, gridLine, tooltip }: ChartPalette): EChartsCoreOption => ({
+    color: items.map((item) => item.status === 'completed' ? token.success : item.status.includes('failed') ? token.danger : item.status === 'not_requested' ? token['text-tertiary'] : token.warning),
+    tooltip: { ...tooltip, trigger: 'item', formatter: '{b}<br/>{c} 篇 · {d}%' },
+    legend: { type: 'scroll', bottom: 0, textStyle: { color: axisText, fontSize: 12 } },
     series: [{
       name: '最新下载状态',
       type: 'pie',
       radius: ['48%', '72%'],
       center: ['50%', '43%'],
       minAngle: 2,
-      label: { color: bodyText, formatter: '{b}\n{c}', fontSize: 9 },
+      label: { color: bodyText, formatter: '{b}\n{c}', fontSize: 11 },
+      labelLayout: { hideOverlap: true },
       labelLine: { length: 8, length2: 5, lineStyle: { color: gridLine } },
       data: items.map((item) => ({ name: item.label, value: item.count })),
     }],
@@ -207,9 +159,9 @@ export function DownloadStatusChart({ data }: { data: Array<{ status: string; co
 }
 
 export function MonitorTimelineChart({ data }: { data: MonitorPoint[] }) {
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: [colors[4]],
-    tooltip: { ...tooltipBase(), trigger: 'axis' },
+  const option = useCallback(({ token, tooltip, categoryAxis, valueAxis }: ChartPalette): EChartsCoreOption => ({
+    color: [token.warning],
+    tooltip: { ...tooltip, trigger: 'axis' },
     grid: { left: 42, right: 18, top: 20, bottom: 36 },
     xAxis: categoryAxis(data.map((item) => item.date.slice(5))),
     yAxis: valueAxis('命中数'),
@@ -221,9 +173,9 @@ export function MonitorTimelineChart({ data }: { data: MonitorPoint[] }) {
 
 export function MaterialVolumeChart({ data }: { data: MaterialSignal[] }) {
   const items = useMemo(() => [...data].sort((a, b) => b.paper_count - a.paper_count).slice(0, 12).reverse(), [data]);
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: [colors[0], colors[1], colors[3]],
-    tooltip: { ...tooltipBase(), trigger: 'axis', axisPointer: { type: 'shadow' } },
+  const option = useCallback(({ token, axisText, tooltip, categoryAxis, valueAxis }: ChartPalette): EChartsCoreOption => ({
+    color: [token['text-tertiary'], token.preprint, token.publication],
+    tooltip: { ...tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { top: 0, right: 0, textStyle: { color: axisText }, data: ['去重论文', '含预印本版本', '含见刊版本'] },
     grid: { left: 132, right: 22, top: 44, bottom: 34 },
     xAxis: valueAxis('篇'),
@@ -240,10 +192,10 @@ export function MaterialVolumeChart({ data }: { data: MaterialSignal[] }) {
 
 export function MaterialStageChart({ data, onSelect }: { data: MaterialSignal[]; onSelect?: (id: string) => void }) {
   const items = useMemo(() => data.filter((item) => (item.preprints ?? 0) + (item.publications ?? 0) > 0), [data]);
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: [colors[6]],
+  const option = useCallback(({ token, bodyText, tooltip, valueAxis }: ChartPalette): EChartsCoreOption => ({
+    color: [token.hot],
     tooltip: {
-      ...tooltipBase(),
+      ...tooltip,
       formatter: (params: { data?: { item?: MaterialSignal; value?: number[] } }) => {
         const item = params.data?.item;
         const value = params.data?.value;
@@ -264,7 +216,8 @@ export function MaterialStageChart({ data, onSelect }: { data: MaterialSignal[];
           symbolSize: Math.max(10, Math.min(42, 8 + Math.sqrt(item.evidence_mentions ?? item.paper_count) * 4)),
         };
       }),
-      label: { show: true, formatter: (params: { data?: { item?: MaterialSignal } }) => params.data?.item?.name ?? '', color: bodyText, position: 'right', fontSize: 9 },
+      label: { show: true, formatter: (params: { data?: { item?: MaterialSignal } }) => params.data?.item?.name ?? '', color: bodyText, position: 'right', fontSize: 11 },
+      labelLayout: { hideOverlap: true },
       itemStyle: { opacity: 0.82 },
       emphasis: { focus: 'self', scale: 1.25 },
     }],
@@ -279,10 +232,10 @@ export function MaterialStageChart({ data, onSelect }: { data: MaterialSignal[];
 
 export function MaterialBurstChart({ data, onSelect }: { data: MaterialBurstSignal[]; onSelect?: (id: string) => void }) {
   const items = useMemo(() => data.filter((item) => item.count_30d > 0).slice(0, 14).reverse(), [data]);
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: [colors[4], colors[0]],
+  const option = useCallback(({ token, axisText, tooltip, categoryAxis, valueAxis }: ChartPalette): EChartsCoreOption => ({
+    color: [token.warning, token.preprint],
     tooltip: {
-      ...tooltipBase(), trigger: 'axis', axisPointer: { type: 'shadow' },
+      ...tooltip, trigger: 'axis', axisPointer: { type: 'shadow' },
       formatter: (params: Array<{ data?: { item?: MaterialBurstSignal } }>) => {
         const item = params[0]?.data?.item;
         if (!item) return '';
@@ -316,9 +269,9 @@ function selectTrendItems(data: TrendSignal[], limit = 16) {
 
 export function ShareShiftChart({ data, label }: { data: TrendSignal[]; label: string }) {
   const items = useMemo(() => selectTrendItems(data), [data]);
-  const option = useMemo<EChartsCoreOption>(() => ({
+  const option = useCallback(({ token, axisText, gridLine, tooltip, categoryAxis }: ChartPalette): EChartsCoreOption => ({
     tooltip: {
-      ...tooltipBase(),
+      ...tooltip,
       formatter: (params: { data?: { item?: TrendSignal } }) => {
         const item = params.data?.item;
         if (!item) return '';
@@ -338,7 +291,7 @@ export function ShareShiftChart({ data, label }: { data: TrendSignal[]; label: s
       data: items.map((item) => ({
         value: item.share_change_pp,
         item,
-        itemStyle: { color: item.share_change_pp >= 0 ? colors[3] : colors[5], borderRadius: item.share_change_pp >= 0 ? [0, 3, 3, 0] : [3, 0, 0, 3] },
+        itemStyle: { color: item.share_change_pp >= 0 ? token.success : token.danger, borderRadius: item.share_change_pp >= 0 ? [0, 3, 3, 0] : [3, 0, 0, 3] },
       })),
       barMaxWidth: 16,
     }],
@@ -362,9 +315,9 @@ export function TrendHeatmapChart({ data }: { data: TrendSignal[] }) {
     return { items, months, values };
   }, [data]);
   const max = Math.max(0.001, ...prepared.values.map((item) => item[2]));
-  const option = useMemo<EChartsCoreOption>(() => ({
+  const option = useCallback(({ token, heatScale, bodyText, axisText, tooltip, categoryAxis }: ChartPalette): EChartsCoreOption => ({
     tooltip: {
-      ...tooltipBase(),
+      ...tooltip,
       formatter: (params: { value?: number[] }) => {
         const value = params.value;
         if (!value) return '';
@@ -372,13 +325,13 @@ export function TrendHeatmapChart({ data }: { data: TrendSignal[] }) {
       },
     },
     grid: { left: 148, right: 20, top: 20, bottom: 76 },
-    xAxis: { ...categoryAxis(prepared.months, 42), splitArea: { show: true } },
-    yAxis: { ...categoryAxis(prepared.items.map((item) => item.name)), axisLabel: { color: axisText, width: 130, overflow: 'truncate' }, splitArea: { show: true } },
+    xAxis: { ...categoryAxis(prepared.months, 42), splitArea: { show: true, areaStyle: { color: [token.surface, token['surface-elevated']] } } },
+    yAxis: { ...categoryAxis(prepared.items.map((item) => item.name)), axisLabel: { color: axisText, width: 130, overflow: 'truncate' }, splitArea: { show: true, areaStyle: { color: [token.surface, token['surface-elevated']] } } },
     visualMap: {
       min: 0, max, calculable: true, orient: 'horizontal', left: 'center', bottom: 4,
-      textStyle: { color: axisText }, inRange: { color: ['#121d2d', '#1d5066', '#2c8e84', '#e5c07b', '#e06c75'] },
+      textStyle: { color: axisText }, inRange: { color: heatScale },
     },
-    series: [{ type: 'heatmap', data: prepared.values, emphasis: { itemStyle: { borderColor: '#fff', borderWidth: 1 } }, progressive: 600 }],
+    series: [{ type: 'heatmap', data: prepared.values, emphasis: { itemStyle: { borderColor: bodyText, borderWidth: 1 } }, progressive: 600 }],
   }), [max, prepared]);
   const ref = useChart(prepared.items.length ? option : null);
   return prepared.items.length
@@ -389,13 +342,14 @@ export function TrendHeatmapChart({ data }: { data: TrendSignal[] }) {
 export function FieldDistributionChart({ data }: { data: Distribution[] }) {
   const labels: Record<string, string> = { mesoscopic_and_electronic: '介观与电子结构', materials_science: '材料科学', strongly_correlated: '强关联体系', statistical_mechanics: '统计物理', soft_matter: '软物质', superconductivity: '超导', quantum_gases: '量子气体', disorder_and_neural_networks: '无序与复杂系统', other_condensed_matter: '其他凝聚态', unclassified: '未分类' };
   const items = data.filter((item) => item.count > 0).map((item) => ({ ...item, name: labels[item.name] || item.name }));
-  const option = useMemo<EChartsCoreOption>(() => ({
+  const option = useCallback(({ colors, bodyText, axisText, gridLine, tooltip }: ChartPalette): EChartsCoreOption => ({
     color: colors,
-    tooltip: { ...tooltipBase(), trigger: 'item', formatter: '{b}<br/>{c} 篇 · {d}%' },
-    legend: { type: 'scroll', bottom: 0, textStyle: { color: axisText, fontSize: 10 } },
+    tooltip: { ...tooltip, trigger: 'item', formatter: '{b}<br/>{c} 篇 · {d}%' },
+    legend: { type: 'scroll', bottom: 0, textStyle: { color: axisText, fontSize: 12 } },
     series: [{
       name: '主研究方向', type: 'pie', radius: ['42%', '70%'], center: ['50%', '43%'], minAngle: 2,
-      label: { color: bodyText, formatter: '{b}\n{d}%', fontSize: 9 },
+      label: { color: bodyText, formatter: '{b}\n{d}%', fontSize: 11 },
+      labelLayout: { hideOverlap: true },
       labelLine: { length: 8, length2: 5, lineStyle: { color: gridLine } },
       data: items.map((item) => ({ name: item.name, value: item.count })),
     }],
@@ -414,9 +368,9 @@ export function SourceOverlapChart({ data }: { data: SourceOverlap }) {
     }));
     return points;
   }, [data]);
-  const option = useMemo<EChartsCoreOption>(() => ({
+  const option = useCallback(({ token, heatScale, bodyText, axisText, tooltip, categoryAxis }: ChartPalette): EChartsCoreOption => ({
     tooltip: {
-      ...tooltipBase(),
+      ...tooltip,
       formatter: (params: { value?: number[] }) => {
         const value = params.value;
         if (!value) return '';
@@ -425,10 +379,10 @@ export function SourceOverlapChart({ data }: { data: SourceOverlap }) {
       },
     },
     grid: { left: 100, right: 22, top: 20, bottom: 78 },
-    xAxis: { ...categoryAxis(data.sources, 35), splitArea: { show: true } },
-    yAxis: { ...categoryAxis(data.sources), splitArea: { show: true } },
-    visualMap: { min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 4, textStyle: { color: axisText }, inRange: { color: ['#142238', '#24627b', '#56b6c2', '#e5c07b'] } },
-    series: [{ type: 'heatmap', data: values, label: { show: data.sources.length <= 7, color: '#f2f7ff', formatter: (params: { value?: number[] }) => `${Number(params.value?.[2] ?? 0).toFixed(0)}%` } }],
+    xAxis: { ...categoryAxis(data.sources, 35), splitArea: { show: true, areaStyle: { color: [token.surface, token['surface-elevated']] } } },
+    yAxis: { ...categoryAxis(data.sources), splitArea: { show: true, areaStyle: { color: [token.surface, token['surface-elevated']] } } },
+    visualMap: { min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 4, textStyle: { color: axisText }, inRange: { color: heatScale } },
+    series: [{ type: 'heatmap', data: values, label: { show: data.sources.length <= 7, color: bodyText, backgroundColor: token.surface, borderRadius: 2, padding: [1, 3], formatter: (params: { value?: number[] }) => `${Number(params.value?.[2] ?? 0).toFixed(0)}%` } }],
   }), [data, values]);
   const ref = useChart(option);
   return <div className="analytics-chart" ref={ref} role="img" aria-label="多个论文数据源之间的交叉覆盖率" />;
@@ -436,17 +390,17 @@ export function SourceOverlapChart({ data }: { data: SourceOverlap }) {
 
 export function QualityTimelineChart({ data }: { data: QualityPoint[] }) {
   const labels = data.map((item) => (item.date ?? item.month ?? '').slice(0, 10));
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: [colors[0], colors[3], colors[6], colors[4]],
-    tooltip: { ...tooltipBase(), trigger: 'axis' },
+  const option = useCallback(({ token, axisText, tooltip, categoryAxis, valueAxis }: ChartPalette): EChartsCoreOption => ({
+    color: [token.preprint, token.success, token.publication, token.warning],
+    tooltip: { ...tooltip, trigger: 'axis' },
     legend: { top: 0, right: 0, textStyle: { color: axisText }, data: ['摘要', 'DOI', '开放获取', '本地 PDF'] },
     grid: { left: 46, right: 22, top: 44, bottom: 42 },
     xAxis: categoryAxis(labels),
     yAxis: { ...valueAxis('覆盖率'), min: 0, max: 100, axisLabel: { color: axisText, formatter: '{value}%' } },
     series: [
       { name: '摘要', type: 'line', smooth: true, showSymbol: false, connectNulls: false, data: data.map((item) => item.abstract_coverage_pct ?? null) },
-      { name: 'DOI', type: 'line', smooth: true, showSymbol: false, connectNulls: false, data: data.map((item) => item.doi_coverage_pct ?? null) },
-      { name: '开放获取', type: 'line', smooth: true, showSymbol: false, connectNulls: false, data: data.map((item) => item.oa_coverage_pct ?? null) },
+      { name: 'DOI', type: 'line', lineStyle: { type: 'dashed' }, smooth: true, showSymbol: false, connectNulls: false, data: data.map((item) => item.doi_coverage_pct ?? null) },
+      { name: '开放获取', type: 'line', lineStyle: { type: 'dotted', width: 3 }, smooth: true, showSymbol: false, connectNulls: false, data: data.map((item) => item.oa_coverage_pct ?? null) },
       { name: '本地 PDF', type: 'line', smooth: true, showSymbol: false, connectNulls: false, data: data.map((item) => item.pdf_coverage_pct ?? null) },
     ],
   }), [data, labels]);
@@ -458,9 +412,9 @@ export function PublicationPathwaysChart({ data }: { data: PublicationPathway[] 
   const items = data.filter((item) => item.count > 0).slice(0, 12).reverse();
   const pathwayLabels: Record<string, string> = { preprint_only: '仅预印本', publication_only: '仅正式见刊', linked_preprint_publication: '预印本 → 正式见刊' };
   const labels = items.map((item) => pathwayLabels[item.name ?? ''] || item.name || [item.from_source, item.to_source].filter(Boolean).join(' → ') || '未知路径');
-  const option = useMemo<EChartsCoreOption>(() => ({
-    color: [colors[2], colors[4]],
-    tooltip: { ...tooltipBase(), trigger: 'axis', axisPointer: { type: 'shadow' } },
+  const option = useCallback(({ token, axisText, tooltip, categoryAxis, valueAxis }: ChartPalette): EChartsCoreOption => ({
+    color: [token.accent, token.warning],
+    tooltip: { ...tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { top: 0, right: 0, textStyle: { color: axisText }, data: ['论文数', '中位转化天数'] },
     grid: { left: 142, right: 50, top: 44, bottom: 34 },
     xAxis: [valueAxis('论文数'), { ...valueAxis('天'), position: 'top', splitLine: { show: false } }],

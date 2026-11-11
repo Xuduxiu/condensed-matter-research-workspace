@@ -7,17 +7,20 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.api.desktop_control import router as desktop_control_router
 from backend.api.library_routes import router as library_router
 from backend.api.routes import router
+from backend.api.translation_routes import router as translation_router
 from backend.api.ui_v2_routes import router as ui_v2_router
 from backend.api.workbench_routes import router as workbench_router
 from backend.config import PROJECT_ROOT
 from backend.db.database import connect, init_db
 from backend.db.strict_condmat import apply_strict_condmat_policy_migrations
 from backend.library.workbench import ensure_workbench_schema
+from backend.library.translations import ensure_translation_schema
 from backend.migrations.unified_library import apply_unified_schema
 from backend.scheduler.live_scanner import start_live_scanner, stop_live_scanner
 
@@ -55,8 +58,14 @@ def create_app() -> FastAPI:
     app.include_router(library_router)
     app.include_router(ui_v2_router)
     app.include_router(workbench_router)
+    app.include_router(translation_router)
     frontend = frontend_dist_path()
     if frontend:
+        def spa_entry() -> FileResponse:
+            return FileResponse(frontend / "index.html")
+
+        for page in ("dashboard", "discover", "library", "materials", "monitors", "system"):
+            app.add_api_route(f"/{page}", spa_entry, methods=["GET"], include_in_schema=False)
         app.mount("/", StaticFiles(directory=str(frontend), html=True), name="radar-web")
     return app
 
@@ -64,14 +73,19 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-def main() -> None:
-    host = os.getenv("CONDMAT_RADAR_API_HOST", "127.0.0.1")
-    port = int(os.getenv("CONDMAT_RADAR_API_PORT", "8000"))
+def initialize_database() -> None:
     with connect() as connection:
         init_db(connection)
         apply_unified_schema(connection)
         ensure_workbench_schema(connection)
+        ensure_translation_schema(connection)
         apply_strict_condmat_policy_migrations(connection)
+
+
+def main() -> None:
+    host = os.getenv("CONDMAT_RADAR_API_HOST", "127.0.0.1")
+    port = int(os.getenv("CONDMAT_RADAR_API_PORT", "8000"))
+    initialize_database()
     start_live_scanner()
     try:
         uvicorn.run(app, host=host, port=port, reload=False)

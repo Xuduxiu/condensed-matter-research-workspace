@@ -1,0 +1,21 @@
+{
+  "name": "@local/dsh-paper-desk",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "description": "凝态文献台 · CondMat Paper Desk for DeepSeek Harness",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": ["client.js", "index.js", "service.js", "translator.js", "math.js", "icon.svg", "cordis.patch.yml", "locale"],
+  "scripts": { "test": "node --test test/*.test.mjs" },
+  "dshPaperDesk": { "projectId": "TH7DP0X71X9BTRRT" },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": { "platform": "web", "immediately": true }
+  }
+}

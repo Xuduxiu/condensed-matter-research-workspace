@@ -1,3 +1,4 @@
+import { paperText } from '../paperText';
 import { formatDate } from '../hooks';
 import { RemotePaper } from '../types';
 import { StatusBadge, VersionBadge } from './primitives';
@@ -22,9 +23,9 @@ export default function RemotePaperRow({ paper, busy = false, onSave, onDownload
         {paper.is_open_access && <StatusBadge tone="accent">开放获取</StatusBadge>}
         {!paper.condmat_evidence && <StatusBadge tone="warning">范围待复核</StatusBadge>}
       </div>
-      <h3>{paper.title}</h3>
+      <h3>{paperText(paper.title)}</h3>
       <p className="paper-authors">{paper.authors.join(' · ') || '作者未提供'}</p>
-      <p className="remote-abstract">{paper.abstract || '摘要未提供。'}</p>
+      <p className="remote-abstract">{paperText(paper.abstract) || '摘要未提供。'}</p>
       <div className="paper-meta">
         <span>{paper.journal || '来源未提供'}</span>
         <span>{formatDate(paper.publication_date || paper.submitted_date)}</span>

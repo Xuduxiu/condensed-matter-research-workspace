@@ -1,0 +1,25 @@
+"""Validation reasons that the private host protocol and SQLite queue may retain."""
+
+VALIDATION_DIAGNOSTICS = {
+    "invalid_json": "无效的 JSON 文本",
+    "invalid_envelope": "回复结构或条数不符",
+    "invalid_fields": "字段类型或键不符",
+    "extra_fields": "回复包含无法匹配的字段",
+    "mixed_fields": "同一条回复混用了两套字段名",
+    "missing_field": "回复缺少应翻译的字段",
+    "invalid_field_type": "译文字段类型不符",
+    "duplicate_id": "重复的记录编号",
+    "id_mismatch": "缺少或多出记录编号",
+    "empty_mismatch": "译文缺失或为空字段生成了内容",
+    "missing_han": "普通英文词句未返回中文",
+    "math_placeholder_mismatch": "数学片段标记不匹配",
+    "math_missing": "缺少原有数学片段",
+    "math_duplicate": "数学片段重复",
+    "math_wrong_field": "数学片段位置跨越了原字段",
+    "math_unknown": "出现未知数学标记",
+    "math_malformed": "数学标记格式不完整",
+    "math_literal_changed": "原文中的字面标记发生变化",
+    "invalid_stream": "流式回复结构异常",
+    "invalid_delimiters": "单篇回复缺少正确的字段或结束标记",
+    "invalid_segments": "译文片段与原文分段不匹配",
+}

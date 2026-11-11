@@ -6,6 +6,7 @@ export type PaperSummary = {
   version_type: 'preprint' | 'publication' | string;
   title: string;
   abstract?: string | null;
+  translation_zh?: { title_zh: string | null; abstract_zh: string | null; source_hash: string; status?: string } | null;
   doi?: string | null;
   arxiv_id?: string | null;
   arxiv_version?: number | null;

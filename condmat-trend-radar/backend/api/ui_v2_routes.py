@@ -20,6 +20,7 @@ from backend.api.analytics_v25 import build_analytics_payload
 from backend.config import db_path
 from backend.db.database import connect
 from backend.library.local_search import fts_query
+from backend.library.translations import read_cached_translations
 from backend.library.workbench import ensure_workbench_schema, get_user_state, list_collections
 
 
@@ -220,7 +221,9 @@ def _decorate_papers(connection: sqlite3.Connection, rows: list[dict[str, Any]])
         """,
         tuple(paper_ids),
     )
+    translations = read_cached_translations(connection, rows)
     for row in rows:
+        row["translation_zh"] = translations.get(str(row["paper_version_id"]))
         row["authors"] = authors.get(str(row["paper_version_id"]), [])
         row["materials"] = materials.get(str(row["canonical_paper_id"]), [])
         row["topics"] = topics.get(str(row["canonical_paper_id"]), [])

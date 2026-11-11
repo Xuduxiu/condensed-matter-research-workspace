@@ -59,9 +59,14 @@ export async function apiGet<T>(path: string, options: { signal?: AbortSignal; c
   return value;
 }
 
-export async function apiPostJson<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
+/** Read-only query whose bounded list of IDs is carried in a JSON body. */
+export function apiQueryJson<T>(path: string, body: unknown, signal?: AbortSignal) {
+  return request<T>(path, { method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+}
+
+async function writeJson<T>(method: 'POST' | 'PUT', path: string, body: unknown, signal?: AbortSignal): Promise<T> {
   const value = await request<T>(path, {
-    method: 'POST',
+    method,
     signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -69,6 +74,9 @@ export async function apiPostJson<T>(path: string, body: unknown, signal?: Abort
   cache.clear();
   return value;
 }
+
+export const apiPostJson = <T>(path: string, body: unknown, signal?: AbortSignal) => writeJson<T>('POST', path, body, signal);
+export const apiPutJson = <T>(path: string, body: unknown, signal?: AbortSignal) => writeJson<T>('PUT', path, body, signal);
 
 export async function apiDelete<T>(path: string, signal?: AbortSignal): Promise<T> {
   const value = await request<T>(path, { method: 'DELETE', signal });
