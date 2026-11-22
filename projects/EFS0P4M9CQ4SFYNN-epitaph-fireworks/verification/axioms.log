@@ -1,0 +1,9 @@
+'Fireworks.Verification.full_statement' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Fireworks.Verification.readable_statement' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Fireworks.Verification.two_site_boundary_case' does not depend on any axioms
+'Fireworks.balanced_binary_ring_spectrum' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Fireworks.balanced_word_decomposition' depends on axioms: [propext, Quot.sound]
+'Fireworks.cyclicD2_append_comm' depends on axioms: [propext, Quot.sound]
+'Fireworks.expand_d2' depends on axioms: [propext, Quot.sound]
+'Fireworks.two_compositions_spectrum' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Fireworks.next_neighbour_distance_ne_two' depends on axioms: [propext, Classical.choice, Quot.sound]

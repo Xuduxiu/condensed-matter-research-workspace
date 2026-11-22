@@ -138,3 +138,7 @@ GitHub Actions 执行两个 Python 测试集与前端检查。单元测试和构
 - [发布验证记录](docs/PUBLICATION_CHECKS.md)
 
 既有审计与验收报告保留为历史记录，其中的数据量、时间与测试计数以各报告所述场景为准。
+
+## 形式化数学项目
+
+- [墓碑礼花 · 平衡二元环的完整差异谱](projects/EFS0P4M9CQ4SFYNN-epitaph-fireworks/README.md)：任意正偶数长度下最近邻、次近邻不同对数的完整分类，已完成 Lean 4.19.0 内核验证。项目号 `EFS0P4M9CQ4SFYNN`；证明、数学说明、复现脚本及验证日志均随项目保存。

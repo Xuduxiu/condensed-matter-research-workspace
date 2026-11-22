@@ -1,0 +1,14 @@
+{
+  "project_id": "EFS0P4M9CQ4SFYNN",
+  "id_algorithm": "SHAKE256(domain || canonical immutable manifest, 80 bits) -> Crockford Base32",
+  "id_domain": "xlab:xid:v1:",
+  "immutable": {
+    "schema": "xlab.math-project.v1",
+    "owner": "Xuduxiu",
+    "title": "Epitaph Fireworks: balanced binary ring spectrum",
+    "created_date": "2026-11-22",
+    "project_kind": "Lean formal mathematics"
+  },
+  "canonical_immutable_json": "{\"created_date\":\"2026-11-22\",\"owner\":\"Xuduxiu\",\"project_kind\":\"Lean formal mathematics\",\"schema\":\"xlab.math-project.v1\",\"title\":\"Epitaph Fireworks: balanced binary ring spectrum\"}",
+  "lean_toolchain": "leanprover/lean4:v4.19.0"
+}

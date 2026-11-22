@@ -1,0 +1,44 @@
+name: Epitaph Fireworks Lean proof
+
+on:
+  push:
+    paths:
+      - 'projects/EFS0P4M9CQ4SFYNN-epitaph-fireworks/**'
+      - '.github/workflows/epitaph-fireworks-lean.yml'
+  pull_request:
+    paths:
+      - 'projects/EFS0P4M9CQ4SFYNN-epitaph-fireworks/**'
+      - '.github/workflows/epitaph-fireworks-lean.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Lean toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          install_dir="$RUNNER_TEMP/fireworks-lean"
+          mkdir -p "$install_dir"
+          curl --fail --location --retry 3 \
+            https://github.com/leanprover/lean4/releases/download/v4.19.0/lean-4.19.0-linux.tar.zst \
+            --output "$install_dir/lean.tar.zst"
+          echo '6fe3ce97a58f44e2b3567d455b994eacec5bfe9ae7774f2a573444480ba813fe  lean.tar.zst' > "$install_dir/SHA256SUMS"
+          (cd "$install_dir" && sha256sum --check SHA256SUMS)
+          tar --zstd -xf "$install_dir/lean.tar.zst" -C "$install_dir"
+          echo "$install_dir/lean-4.19.0-linux/bin" >> "$GITHUB_PATH"
+      - name: Rebuild and audit the complete theorem
+        working-directory: projects/EFS0P4M9CQ4SFYNN-epitaph-fireworks
+        run: python3 scripts/verify.py
+      - name: Preserve proof verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: epitaph-fireworks-verification
+          path: projects/EFS0P4M9CQ4SFYNN-epitaph-fireworks/verification/

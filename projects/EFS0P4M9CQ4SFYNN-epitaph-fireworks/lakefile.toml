@@ -1,0 +1,7 @@
+name = "epitaphFireworks"
+version = "0.1.0"
+defaultTargets = ["Fireworks"]
+
+[[lean_lib]]
+name = "Fireworks"
+moreLeanArgs = ["-DwarningAsError=true"]

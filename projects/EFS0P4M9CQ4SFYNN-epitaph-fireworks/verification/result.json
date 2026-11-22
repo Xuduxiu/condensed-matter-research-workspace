@@ -1,0 +1,67 @@
+{
+  "project_id": "EFS0P4M9CQ4SFYNN",
+  "status": "PASS",
+  "started_utc": "2026-11-22T08:59:35.460995+00:00",
+  "lean_version": "Lean (version 4.19.0, x86_64-unknown-linux-gnu, commit 6caaee842e94, Release)",
+  "finished_utc": "2026-11-22T08:59:39.973640+00:00",
+  "axiom_dependencies": {
+    "Fireworks.Verification.full_statement": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.Verification.readable_statement": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.balanced_binary_ring_spectrum": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.balanced_word_decomposition": [
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.cyclicD2_append_comm": [
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.expand_d2": [
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.two_compositions_spectrum": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.next_neighbour_distance_ne_two": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "Fireworks.Verification.two_site_boundary_case": []
+  },
+  "source_sha256": {
+    "Fireworks.lean": "eb4eae181146b22cad1d02a8ef296f9ae03d7f5b0274c31ae3570e7014d3f48f",
+    "Verification.lean": "b3a5c82a09c84420a912031e5c58f3e0de615f41a502c6ffe469f0ac8ab7c8d5",
+    "Fireworks/BinaryRing.lean": "406fbb90c2a85a38eb897a56fc305ff81ce48c7f4a4c12eaea6c4ce357e3b814",
+    "Fireworks/Classification.lean": "4b247b6a521e45b49157106e6c12a91b9f88233579e51b3bf91b7c51335308e3",
+    "Fireworks/Composition.lean": "f60ec3097d1aaa2b9193fdc8cf773bd0b9742374a022ed2fc1146ffe29f83d72",
+    "Fireworks/Decomposition.lean": "2d10023539632e93efd1aa9132b448e2a27f9cd8e2c7295ab5284be0d6153ba9",
+    "Fireworks/Rotation.lean": "a905052d51507b6888b840713554a5ac9b68ef10c1e605bc6baadce6841ec42e",
+    "Fireworks/Spectrum.lean": "09b03bcb349b42e1b3cd950640a47b26145bae398992601d6fbe432972faecaf",
+    "lean-toolchain": "55e97be96000b5e9e290c9e74482e5e317861499a5540353ce845471bded8cea",
+    "lakefile.toml": "28feb4084ef4e87bfe6ae55be4f84c15fbd05545e4d985511347bbc47afd1566",
+    "scripts/verify.py": "5ba8b80f25e721fbb01e47aacec9d6b73611be80a636474fc94d6e379a079e32",
+    "scripts/enumerate.py": "34ebf6f3ea4a0d0e1676c976afc38104a8b7020b991374d7e11473a24b7c724e"
+  },
+  "finite_diagnostic": {
+    "maximum_length": 18,
+    "words_checked": 66196
+  },
+  "checker": "Lean 4.19.0 kernel; fresh project build; trust=0 audit",
+  "independent_kernel_checker": "NOT_RUN"
+}
